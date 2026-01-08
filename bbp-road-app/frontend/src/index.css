@@ -1,0 +1,22 @@
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background: #f6f6f6;
+  color: #111111;
+}
+
+input, select, textarea, button {
+  color: #111111;
+}
+
+input, select, textarea {
+  background: #ffffff;
+}

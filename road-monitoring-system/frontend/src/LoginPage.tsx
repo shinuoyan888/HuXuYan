@@ -2,7 +2,8 @@ import { useState } from "react";
 
 type User = { id: number; username: string };
 
-const API_BASE = "http://127.0.0.1:8000";
+// Use Vite dev proxy so we don't depend on CORS/local hostnames
+const API_BASE = "/api";
 
 export default function LoginPage(props: { onLogin: (u: User) => void }) {
   const [username, setUsername] = useState("alice");

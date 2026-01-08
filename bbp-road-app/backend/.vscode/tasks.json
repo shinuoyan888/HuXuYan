@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "BBP Backend",
+			"type": "shell",
+			"command": "C:/Users/kaffe/AppData/Local/Microsoft/WindowsApps/python3.13.exe -m uvicorn main:app --host 0.0.0.0 --port 8000",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
