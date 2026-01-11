@@ -34,6 +34,22 @@ export type Trip = {
   distance_m: number;
   duration_s: number;
   geometry?: { type: string; coordinates: [number, number][] };
+  weather_summary?: string;
+  weather?: Weather;
+  route_source?: string;
+  created_at?: string;
+};
+
+export type Weather = {
+  condition: string;
+  condition_localized: string;
+  temperature_c: number;
+  wind_speed_kmh: number;
+  humidity_percent: number;
+  rain_chance_percent: number;
+  summary: string;
+  is_cycling_friendly: boolean;
+  fetched_at?: string;
 };
 
 export type Aggregate = {
@@ -232,18 +248,27 @@ export type ScoredRoute = {
   route_id: string;
   rank: number;
   total_distance: number; // meters
+  duration_s?: number;
+  duration_display?: string;
   road_quality_score: number; // 0-100, higher is better
   tags: string[];
+  tags_localized?: string[];
   geometry: string; // polyline encoded
   geometry_geojson: {
     type: string;
     coordinates: [number, number][];
   };
   segments_warning: SegmentWarning[];
+  segments_warning_localized?: SegmentWarning[];
+  source?: string;
 };
 
 export type PathSearchResponse = {
   routes: ScoredRoute[];
+  weather_summary?: string;
+  weather?: Weather;
+  cycling_recommendation?: string;
+  route_source?: string;
 };
 
 export type PathSearchPreference = "safety_first" | "shortest" | "balanced";
@@ -258,4 +283,54 @@ export async function searchRoutes(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ origin, destination, preferences }),
   });
+}
+
+// ---- Weather API ----
+export async function getWeather(lat: number, lon: number, userId?: number): Promise<Weather> {
+  const query = userId !== undefined ? `?lat=${lat}&lon=${lon}&user_id=${userId}` : `?lat=${lat}&lon=${lon}`;
+  return request<Weather>(`/weather${query}`);
+}
+
+// ---- i18n API ----
+export type TranslationsResponse = {
+  language: string;
+  translations: Record<string, string>;
+  available_languages: string[];
+};
+
+export async function getTranslations(lang: string = "en"): Promise<TranslationsResponse> {
+  return request<TranslationsResponse>(`/i18n/translations?lang=${lang}`);
+}
+
+export type LanguageInfo = {
+  code: string;
+  name: string;
+  native_name: string;
+};
+
+export async function getAvailableLanguages(): Promise<{ languages: LanguageInfo[]; default: string }> {
+  return request<{ languages: LanguageInfo[]; default: string }>(`/i18n/languages`);
+}
+
+// ---- Data Aggregation ----
+export type AggregationResult = {
+  segment_id: number;
+  reports_total: number;
+  reports_confirmed: number;
+  reports_fresh: number;
+  weighted_negative_score: number;
+  weighted_positive_score: number;
+  previous_status: string;
+  recommended_status: string;
+  status_changed: boolean;
+  aggregated_at: string;
+};
+
+export async function triggerAggregationAll(): Promise<{
+  triggered_at: string;
+  segments_processed: number;
+  status_changes: number;
+  results: AggregationResult[];
+}> {
+  return request(`/aggregation/trigger`, { method: "POST" });
 }

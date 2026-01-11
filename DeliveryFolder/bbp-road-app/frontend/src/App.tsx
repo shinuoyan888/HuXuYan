@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout, { type NavKey } from "./Layout";
 import DashboardPage from "./DashboardPage";
 import SegmentsPage from "./SegmentsPage";
@@ -9,12 +9,19 @@ import AutoDetectionPage from "./AutoDetectionPage";
 import SettingsPage from "./SettingsPage";
 import RoutePlanningPage from "./RoutePlanningPage";
 import LoginPage from "./LoginPage";
+import { AppProvider, useAppContext } from "./AppContext";
 import type { User } from "./api";
 
-export default function App() {
+function AppContent() {
   const [user, setUser] = useState<User | null>(null);
   const [nav, setNav] = useState<NavKey>("dashboard");
   const [selectedSegmentId, setSelectedSegmentId] = useState<number | null>(null);
+  const { setUserId, darkMode } = useAppContext();
+
+  // Sync userId with context when user logs in/out
+  useEffect(() => {
+    setUserId(user?.id ?? null);
+  }, [user, setUserId]);
 
   if (!user) {
     return <LoginPage onLogin={(u) => setUser(u)} />;
@@ -54,5 +61,13 @@ export default function App() {
         <SettingsPage userId={user.id} />
       ) : null}
     </Layout>
+  );
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 }

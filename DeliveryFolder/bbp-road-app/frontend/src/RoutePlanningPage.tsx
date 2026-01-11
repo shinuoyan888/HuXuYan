@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, Popup, CircleMarker } from "react-leaflet";
 import L from "leaflet";
-import { searchRoutes, type ScoredRoute, type PathSearchPreference } from "./api";
+import { searchRoutes, type ScoredRoute, type PathSearchPreference, type Weather, type PathSearchResponse } from "./api";
 
 const icon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -84,6 +84,9 @@ export default function RoutePlanningPage() {
   const [routes, setRoutes] = useState<ScoredRoute[]>([]);
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [weather, setWeather] = useState<Weather | null>(null);
+  const [cyclingRecommendation, setCyclingRecommendation] = useState<string | null>(null);
+  const [routeSource, setRouteSource] = useState<string | null>(null);
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -105,6 +108,9 @@ export default function RoutePlanningPage() {
     setError(null);
     setRoutes([]);
     setSelectedRouteId(null);
+    setWeather(null);
+    setCyclingRecommendation(null);
+    setRouteSource(null);
 
     try {
       const result = await searchRoutes(
@@ -115,6 +121,16 @@ export default function RoutePlanningPage() {
       setRoutes(result.routes);
       if (result.routes.length > 0) {
         setSelectedRouteId(result.routes[0].route_id);
+      }
+      // Set weather info
+      if (result.weather) {
+        setWeather(result.weather);
+      }
+      if (result.cycling_recommendation) {
+        setCyclingRecommendation(result.cycling_recommendation);
+      }
+      if (result.route_source) {
+        setRouteSource(result.route_source);
       }
     } catch (e: any) {
       setError(e?.message ?? "Failed to search routes");
@@ -258,7 +274,85 @@ export default function RoutePlanningPage() {
                 {error}
               </div>
             )}
+
+            {/* Route Source Indicator */}
+            {routeSource && (
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: 8,
+                  borderRadius: 8,
+                  background: routeSource === "osrm" ? "#dbeafe" : "#fef3c7",
+                  color: routeSource === "osrm" ? "#1e40af" : "#92400e",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  textAlign: "center",
+                }}
+              >
+                {routeSource === "osrm" ? "🛣️ Using real road data (OSRM)" : "📐 Using fallback geometry"}
+              </div>
+            )}
           </div>
+
+          {/* Weather Panel */}
+          {weather && (
+            <div
+              style={{
+                padding: 16,
+                background: weather.is_cycling_friendly ? "#f0fdf4" : "#fffbeb",
+                border: `1px solid ${weather.is_cycling_friendly ? "#bbf7d0" : "#fcd34d"}`,
+                borderRadius: 14,
+              }}
+            >
+              <div style={{ fontWeight: 800, marginBottom: 12, color: "#111", fontSize: 16 }}>
+                🌤️ Weather Conditions
+              </div>
+              
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ padding: 10, background: "white", borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, color: "#666" }}>Condition</div>
+                  <div style={{ fontWeight: 700, color: "#111", marginTop: 4 }}>
+                    {weather.condition_localized || weather.condition}
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: "white", borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, color: "#666" }}>Temperature</div>
+                  <div style={{ fontWeight: 700, color: "#111", marginTop: 4 }}>
+                    {weather.temperature_c}°C
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: "white", borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, color: "#666" }}>Wind Speed</div>
+                  <div style={{ fontWeight: 700, color: "#111", marginTop: 4 }}>
+                    {weather.wind_speed_kmh} km/h
+                  </div>
+                </div>
+                <div style={{ padding: 10, background: "white", borderRadius: 10 }}>
+                  <div style={{ fontSize: 11, color: "#666" }}>Rain Chance</div>
+                  <div style={{ fontWeight: 700, color: "#111", marginTop: 4 }}>
+                    {weather.rain_chance_percent}%
+                  </div>
+                </div>
+              </div>
+
+              {cyclingRecommendation && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: 10,
+                    borderRadius: 10,
+                    background: weather.is_cycling_friendly ? "#dcfce7" : "#fef9c3",
+                    color: weather.is_cycling_friendly ? "#166534" : "#854d0e",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    textAlign: "center",
+                  }}
+                >
+                  {weather.is_cycling_friendly ? "✓" : "⚠️"} {cyclingRecommendation}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Route Results */}
           {routes.length > 0 && (
