@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createSegmentWithCoords, listSegments, type Segment } from "./api";
 import MapView from "./MapView";
+import { useAppContext } from "./AppContext";
 
 const STATUS_OPTIONS = ["optimal", "suboptimal", "maintenance"] as const;
 
@@ -11,9 +12,29 @@ export default function SegmentsPage(props: {
   selectedSegmentId: number | null;
   onSelectSegment: (id: number) => void;
 }) {
+  const { darkMode } = useAppContext();
   const [segments, setSegments] = useState<Segment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Dark mode colors
+  const colors = darkMode
+    ? {
+        text: "#e5e5e5",
+        textMuted: "#a0a0a0",
+        cardBg: "#16213e",
+        cardBorder: "#0f3460",
+        itemBg: "#1a1a2e",
+        itemBorder: "#0f3460",
+      }
+    : {
+        text: "#111",
+        textMuted: "#666",
+        cardBg: "white",
+        cardBorder: "#eee",
+        itemBg: "#fff",
+        itemBorder: "#eee",
+      };
 
   const [form, setForm] = useState({
     status: "optimal" as StatusOption,
@@ -84,9 +105,9 @@ export default function SegmentsPage(props: {
   const mapCenter: [number, number] = mapSegments[0]?.start ?? [form.start_lat, form.start_lon];
 
   return (
-    <div style={{ color: "#111" }}>
-      <h1 style={{ fontSize: 34, fontWeight: 800, margin: 0 }}>Segments</h1>
-      <p style={{ color: "#444", marginTop: 6 }}>Create a segment for the logged-in user and pick one for reports.</p>
+    <div>
+      <h1 style={{ fontSize: 34, fontWeight: 800, margin: 0, color: darkMode ? "#e5e5e5" : "#111" }}>Segments</h1>
+      <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 6 }}>Create a segment for the logged-in user and pick one for reports.</p>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
         <div>
@@ -94,11 +115,11 @@ export default function SegmentsPage(props: {
             style={{
               padding: 16,
               borderRadius: 14,
-              border: "1px solid #eee",
-              background: "#fff",
+              border: `1px solid ${colors.cardBorder}`,
+              background: colors.cardBg,
             }}
           >
-            <h3>Create Segment</h3>
+            <h3 style={{ color: colors.text }}>Create Segment</h3>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               <input
@@ -178,7 +199,7 @@ export default function SegmentsPage(props: {
             )}
           </div>
 
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 16, color: colors.text }}>
             <strong>Selected segment:</strong> {props.selectedSegmentId ? `#${props.selectedSegmentId}` : "None"}
           </div>
         </div>
@@ -194,24 +215,24 @@ export default function SegmentsPage(props: {
                 style={{
                   padding: 14,
                   borderRadius: 14,
-                  border: selected ? "2px solid #111" : "1px solid #eee",
+                  border: selected ? "2px solid #3b82f6" : `1px solid ${colors.cardBorder}`,
                   cursor: "pointer",
-                  background: "#fff",
+                  background: selected ? (darkMode ? "#1e3a5f" : "#eff6ff") : colors.cardBg,
                 }}
               >
-                <strong>Segment #{s.id}</strong>
-                <div>status: {s.status}</div>
-                <div>user: {s.user_id}</div>
-                <div>
+                <strong style={{ color: colors.text }}>Segment #{s.id}</strong>
+                <div style={{ color: colors.textMuted }}>status: {s.status}</div>
+                <div style={{ color: colors.textMuted }}>user: {s.user_id}</div>
+                <div style={{ color: colors.textMuted }}>
                   start: {s.start_lat.toFixed(4)}, {s.start_lon.toFixed(4)} → end: {s.end_lat.toFixed(4)}, {s.end_lon.toFixed(4)}
                 </div>
-                {s.obstacle ? <div>obstacle: {s.obstacle}</div> : null}
-                {s.created_at ? <div style={{ color: "#666", fontSize: 12 }}>{s.created_at}</div> : null}
+                {s.obstacle ? <div style={{ color: colors.textMuted }}>obstacle: {s.obstacle}</div> : null}
+                {s.created_at ? <div style={{ color: colors.textMuted, fontSize: 12 }}>{s.created_at}</div> : null}
               </div>
             );
           })}
 
-          {segments.length === 0 ? <div style={{ color: "#666" }}>No segments yet.</div> : null}
+          {segments.length === 0 ? <div style={{ color: colors.textMuted }}>No segments yet.</div> : null}
         </div>
       </div>
     </div>

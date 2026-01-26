@@ -1,13 +1,34 @@
 import { useEffect, useState } from "react";
 import { aggregateSegment, confirmReport, createReport, listReports, type Aggregate, type Report } from "./api";
+import { useAppContext } from "./AppContext";
 
 export default function ReportsPage(props: { userId: number; selectedSegmentId: number | null }) {
+  const { darkMode } = useAppContext();
   const [note, setNote] = useState("Road feels bumpy today");
   const [reports, setReports] = useState<Report[]>([]);
   const [agg, setAgg] = useState<Aggregate | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+
+  // Dark mode colors
+  const colors = darkMode
+    ? {
+        text: "#e5e5e5",
+        textMuted: "#a0a0a0",
+        cardBg: "#16213e",
+        cardBorder: "#0f3460",
+        itemBg: "#1a1a2e",
+        itemBorder: "#0f3460",
+      }
+    : {
+        text: "#111",
+        textMuted: "#666",
+        cardBg: "white",
+        cardBorder: "#eee",
+        itemBg: "#fff",
+        itemBorder: "#eee",
+      };
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -79,9 +100,9 @@ export default function ReportsPage(props: { userId: number; selectedSegmentId: 
 
   if (!props.selectedSegmentId) {
     return (
-      <div style={{ color: "#111" }}>
-        <h1 style={{ margin: 0, color: "#111", fontSize: 34, fontWeight: 800 }}>Reports</h1>
-        <p style={{ color: "#444", marginTop: 8 }}>
+      <div>
+        <h1 style={{ margin: 0, color: darkMode ? "#e5e5e5" : "#111", fontSize: 34, fontWeight: 800 }}>Reports</h1>
+        <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 8 }}>
           Please go to <b>Segments</b> and select a segment first.
         </p>
       </div>
@@ -89,9 +110,9 @@ export default function ReportsPage(props: { userId: number; selectedSegmentId: 
   }
 
   return (
-    <div style={{ color: "#111" }}>
-      <h1 style={{ margin: 0, color: "#111", fontSize: 34, fontWeight: 800 }}>Reports</h1>
-      <p style={{ color: "#444", marginTop: 8 }}>
+    <div>
+      <h1 style={{ margin: 0, color: darkMode ? "#e5e5e5" : "#111", fontSize: 34, fontWeight: 800 }}>Reports</h1>
+      <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 8 }}>
         Segment: <span style={{ fontFamily: "monospace", color: "#111" }}>#{props.selectedSegmentId}</span>
       </p>
 

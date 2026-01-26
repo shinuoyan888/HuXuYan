@@ -10,8 +10,10 @@ import {
   type Report,
   type DetectionResult,
 } from "./api";
+import { useAppContext } from "./AppContext";
 
 export default function AutoDetectionPage(props: { userId: number }) {
+  const { darkMode } = useAppContext();
   const [segments, setSegments] = useState<Segment[]>([]);
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null);
   const [detection, setDetection] = useState<DetectionResult | null>(null);
@@ -20,6 +22,27 @@ export default function AutoDetectionPage(props: { userId: number }) {
   const [detecting, setDetecting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Dark mode colors
+  const colors = darkMode
+    ? {
+        text: "#e5e5e5",
+        textMuted: "#a0a0a0",
+        cardBg: "#16213e",
+        cardBorder: "#0f3460",
+        itemBg: "#1a1a2e",
+        itemBorder: "#0f3460",
+        selectedBg: "#1e3a5f",
+      }
+    : {
+        text: "#111",
+        textMuted: "#666",
+        cardBg: "white",
+        cardBorder: "#eee",
+        itemBg: "#fff",
+        itemBorder: "#eee",
+        selectedBg: "#eff6ff",
+      };
 
   async function loadSegments() {
     setLoading(true);
@@ -119,9 +142,9 @@ export default function AutoDetectionPage(props: { userId: number }) {
   };
 
   return (
-    <div style={{ color: "#111" }}>
-      <h1 style={{ margin: 0, fontSize: 34, fontWeight: 900 }}>Auto Detection & Confirmation</h1>
-      <div style={{ color: "#444", marginTop: 6 }}>
+    <div>
+      <h1 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: darkMode ? "#e5e5e5" : "#111" }}>Auto Detection & Confirmation</h1>
+      <div style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 6 }}>
         Automatically detect road segment status and confirm reports.
       </div>
 
@@ -162,8 +185,8 @@ export default function AutoDetectionPage(props: { userId: number }) {
         {/* Segments List */}
         <div
           style={{
-            background: "white",
-            border: "1px solid #eee",
+            background: colors.cardBg,
+            border: `1px solid ${colors.cardBorder}`,
             borderRadius: 14,
             padding: 16,
             maxHeight: 500,
@@ -171,15 +194,16 @@ export default function AutoDetectionPage(props: { userId: number }) {
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <div style={{ fontWeight: 800 }}>Segments</div>
+            <div style={{ fontWeight: 800, color: colors.text }}>Segments</div>
             <button
               onClick={loadSegments}
               disabled={loading}
               style={{
                 padding: "6px 10px",
                 borderRadius: 8,
-                border: "1px solid #e5e5e5",
-                background: "white",
+                border: `1px solid ${colors.cardBorder}`,
+                background: colors.cardBg,
+                color: colors.text,
                 cursor: "pointer",
                 fontSize: 12,
               }}
@@ -196,13 +220,13 @@ export default function AutoDetectionPage(props: { userId: number }) {
                 padding: 12,
                 marginBottom: 8,
                 borderRadius: 10,
-                border: selectedSegment?.id === seg.id ? "2px solid #3b82f6" : "1px solid #eee",
-                background: selectedSegment?.id === seg.id ? "#eff6ff" : "#fff",
+                border: selectedSegment?.id === seg.id ? "2px solid #3b82f6" : `1px solid ${colors.itemBorder}`,
+                background: selectedSegment?.id === seg.id ? colors.selectedBg : colors.itemBg,
                 cursor: "pointer",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontWeight: 700 }}>Segment #{seg.id}</div>
+                <div style={{ fontWeight: 700, color: colors.text }}>Segment #{seg.id}</div>
                 <div
                   style={{
                     padding: "4px 8px",
@@ -216,7 +240,7 @@ export default function AutoDetectionPage(props: { userId: number }) {
                   {seg.status}
                 </div>
               </div>
-              <div style={{ marginTop: 6, fontSize: 12, color: "#666" }}>
+              <div style={{ marginTop: 6, fontSize: 12, color: colors.textMuted }}>
                 {seg.start_lat.toFixed(4)}, {seg.start_lon.toFixed(4)} → {seg.end_lat.toFixed(4)}, {seg.end_lon.toFixed(4)}
               </div>
             </div>
@@ -226,14 +250,14 @@ export default function AutoDetectionPage(props: { userId: number }) {
         {/* Detection Panel */}
         <div style={{ display: "grid", gap: 14 }}>
           {/* Auto-Detection */}
-          <div style={{ background: "white", border: "1px solid #eee", borderRadius: 14, padding: 16 }}>
-            <div style={{ fontWeight: 800, marginBottom: 12 }}>🔍 Auto-Detection</div>
+          <div style={{ background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 14, padding: 16 }}>
+            <div style={{ fontWeight: 800, marginBottom: 12, color: colors.text }}>🔍 Auto-Detection</div>
 
             {!selectedSegment ? (
-              <div style={{ color: "#666" }}>Select a segment to detect its status.</div>
+              <div style={{ color: colors.textMuted }}>Select a segment to detect its status.</div>
             ) : (
               <>
-                <div style={{ marginBottom: 12 }}>
+                <div style={{ marginBottom: 12, color: colors.text }}>
                   <strong>Selected:</strong> Segment #{selectedSegment.id} ({selectedSegment.status})
                 </div>
 
@@ -313,14 +337,14 @@ export default function AutoDetectionPage(props: { userId: number }) {
           </div>
 
           {/* Auto-Confirm Reports */}
-          <div style={{ background: "white", border: "1px solid #eee", borderRadius: 14, padding: 16 }}>
-            <div style={{ fontWeight: 800, marginBottom: 12 }}>✅ Auto-Confirm Reports</div>
+          <div style={{ background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 14, padding: 16 }}>
+            <div style={{ fontWeight: 800, marginBottom: 12, color: colors.text }}>✅ Auto-Confirm Reports</div>
 
             {!selectedSegment ? (
-              <div style={{ color: "#666" }}>Select a segment to manage reports.</div>
+              <div style={{ color: colors.textMuted }}>Select a segment to manage reports.</div>
             ) : (
               <>
-                <div style={{ marginBottom: 10, fontSize: 14 }}>
+                <div style={{ marginBottom: 10, fontSize: 14, color: colors.text }}>
                   <strong>Reports:</strong> {reports.length} total, {reports.filter((r) => r.confirmed).length} confirmed
                 </div>
 
@@ -330,8 +354,9 @@ export default function AutoDetectionPage(props: { userId: number }) {
                     style={{
                       padding: "8px 14px",
                       borderRadius: 8,
-                      border: "1px solid #e5e5e5",
-                      background: "white",
+                      border: `1px solid ${colors.cardBorder}`,
+                      background: colors.cardBg,
+                      color: colors.text,
                       fontWeight: 600,
                       cursor: "pointer",
                     }}

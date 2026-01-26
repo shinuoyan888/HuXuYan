@@ -1,12 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { listTrips, deleteTrip, type Trip } from "./api";
 import MapView from "./MapView";
+import { useAppContext } from "./AppContext";
 
 export default function TripHistoryPage(props: { userId: number }) {
+  const { darkMode } = useAppContext();
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+
+  // Dark mode colors
+  const colors = darkMode
+    ? {
+        text: "#e5e5e5",
+        textMuted: "#a0a0a0",
+        cardBg: "#16213e",
+        cardBorder: "#0f3460",
+        itemBg: "#1a1a2e",
+        itemBorder: "#0f3460",
+      }
+    : {
+        text: "#111",
+        textMuted: "#666",
+        cardBg: "white",
+        cardBorder: "#eee",
+        itemBg: "#fff",
+        itemBorder: "#eee",
+      };
 
   async function loadTrips() {
     setLoading(true);
@@ -53,11 +74,11 @@ export default function TripHistoryPage(props: { userId: number }) {
   const totalMin = trips.reduce((acc, t) => acc + t.duration_s, 0) / 60;
 
   return (
-    <div style={{ color: "#111" }}>
+    <div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 900 }}>Trip History</h1>
-          <div style={{ color: "#444", marginTop: 6 }}>
+          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 900, color: darkMode ? "#e5e5e5" : "#111" }}>Trip History</h1>
+          <div style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 6 }}>
             View and manage your recorded trips.
           </div>
         </div>
@@ -103,33 +124,33 @@ export default function TripHistoryPage(props: { userId: number }) {
           gap: 12,
         }}
       >
-        <div style={{ padding: 14, background: "white", border: "1px solid #eee", borderRadius: 14 }}>
-          <div style={{ fontSize: 12, color: "#555" }}>Total Trips</div>
-          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900 }}>{trips.length}</div>
+        <div style={{ padding: 14, background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 14 }}>
+          <div style={{ fontSize: 12, color: colors.textMuted }}>Total Trips</div>
+          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, color: colors.text }}>{trips.length}</div>
         </div>
-        <div style={{ padding: 14, background: "white", border: "1px solid #eee", borderRadius: 14 }}>
-          <div style={{ fontSize: 12, color: "#555" }}>Total Distance</div>
-          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900 }}>{totalKm.toFixed(1)} km</div>
+        <div style={{ padding: 14, background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 14 }}>
+          <div style={{ fontSize: 12, color: colors.textMuted }}>Total Distance</div>
+          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, color: colors.text }}>{totalKm.toFixed(1)} km</div>
         </div>
-        <div style={{ padding: 14, background: "white", border: "1px solid #eee", borderRadius: 14 }}>
-          <div style={{ fontSize: 12, color: "#555" }}>Total Duration</div>
-          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900 }}>{Math.round(totalMin)} min</div>
+        <div style={{ padding: 14, background: colors.cardBg, border: `1px solid ${colors.cardBorder}`, borderRadius: 14 }}>
+          <div style={{ fontSize: 12, color: colors.textMuted }}>Total Duration</div>
+          <div style={{ marginTop: 6, fontSize: 28, fontWeight: 900, color: colors.text }}>{Math.round(totalMin)} min</div>
         </div>
       </div>
 
       <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div
           style={{
-            background: "white",
-            border: "1px solid #eee",
+            background: colors.cardBg,
+            border: `1px solid ${colors.cardBorder}`,
             borderRadius: 14,
             padding: 16,
             maxHeight: 500,
             overflow: "auto",
           }}
         >
-          <div style={{ fontWeight: 800, marginBottom: 10 }}>Your Trips</div>
-          {trips.length === 0 && <div style={{ color: "#666" }}>No trips recorded yet.</div>}
+          <div style={{ fontWeight: 800, marginBottom: 10, color: colors.text }}>Your Trips</div>
+          {trips.length === 0 && <div style={{ color: colors.textMuted }}>No trips recorded yet.</div>}
           {trips.map((t) => (
             <div
               key={t.id}
@@ -138,13 +159,13 @@ export default function TripHistoryPage(props: { userId: number }) {
                 padding: 12,
                 marginBottom: 8,
                 borderRadius: 10,
-                border: selectedTrip?.id === t.id ? "2px solid #3b82f6" : "1px solid #eee",
-                background: selectedTrip?.id === t.id ? "#eff6ff" : "#fff",
+                border: selectedTrip?.id === t.id ? "2px solid #3b82f6" : `1px solid ${colors.itemBorder}`,
+                background: selectedTrip?.id === t.id ? (darkMode ? "#1e3a5f" : "#eff6ff") : colors.itemBg,
                 cursor: "pointer",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ fontWeight: 700 }}>Trip #{t.id}</div>
+                <div style={{ fontWeight: 700, color: colors.text }}>Trip #{t.id}</div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -163,13 +184,13 @@ export default function TripHistoryPage(props: { userId: number }) {
                   Delete
                 </button>
               </div>
-              <div style={{ marginTop: 6, fontSize: 13, color: "#444" }}>
+              <div style={{ marginTop: 6, fontSize: 13, color: colors.text }}>
                 {(t.distance_m / 1000).toFixed(2)} km • {Math.round(t.duration_s / 60)} min
               </div>
-              <div style={{ marginTop: 4, fontSize: 11, color: "#666" }}>
+              <div style={{ marginTop: 4, fontSize: 11, color: colors.textMuted }}>
                 {t.from_lat.toFixed(4)}, {t.from_lon.toFixed(4)} → {t.to_lat.toFixed(4)}, {t.to_lon.toFixed(4)}
               </div>
-              <div style={{ marginTop: 4, fontSize: 11, color: "#999" }}>{t.created_at}</div>
+              <div style={{ marginTop: 4, fontSize: 11, color: colors.textMuted }}>{t.created_at}</div>
             </div>
           ))}
         </div>
@@ -181,13 +202,13 @@ export default function TripHistoryPage(props: { userId: number }) {
             <div
               style={{
                 height: 460,
-                background: "#f9fafb",
-                border: "1px solid #eee",
+                background: colors.cardBg,
+                border: `1px solid ${colors.cardBorder}`,
                 borderRadius: 14,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#666",
+                color: colors.textMuted,
               }}
             >
               Select a trip to view on map

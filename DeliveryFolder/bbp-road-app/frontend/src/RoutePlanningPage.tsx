@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, Popup, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import { searchRoutes, type ScoredRoute, type PathSearchPreference, type Weather, type PathSearchResponse } from "./api";
+import { useAppContext } from "./AppContext";
 
 const icon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -73,6 +74,7 @@ function RouteTag(props: { tag: string }) {
 }
 
 export default function RoutePlanningPage() {
+  const { darkMode } = useAppContext();
   // Default to Singapore coordinates
   const [originLat, setOriginLat] = useState(1.3521);
   const [originLon, setOriginLon] = useState(103.8198);
@@ -87,6 +89,21 @@ export default function RoutePlanningPage() {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [cyclingRecommendation, setCyclingRecommendation] = useState<string | null>(null);
   const [routeSource, setRouteSource] = useState<string | null>(null);
+
+  // Dark mode colors
+  const colors = darkMode
+    ? {
+        text: "#e5e5e5",
+        textMuted: "#a0a0a0",
+        cardBg: "#16213e",
+        cardBorder: "#0f3460",
+      }
+    : {
+        text: "#111",
+        textMuted: "#666",
+        cardBg: "white",
+        cardBorder: "#eee",
+      };
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -155,11 +172,11 @@ export default function RoutePlanningPage() {
   const selectedRoute = routes.find((r) => r.route_id === selectedRouteId);
 
   return (
-    <div style={{ color: "#111" }}>
-      <h1 style={{ margin: 0, color: "#111", fontSize: 34, fontWeight: 800 }}>
+    <div>
+      <h1 style={{ margin: 0, color: darkMode ? "#e5e5e5" : "#111", fontSize: 34, fontWeight: 800 }}>
         Route Planning & Scoring
       </h1>
-      <p style={{ color: "#444", marginTop: 8 }}>
+      <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 8 }}>
         Plan routes with intelligent scoring based on road quality and pothole data.
       </p>
 

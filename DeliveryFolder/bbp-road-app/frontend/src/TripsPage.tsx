@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import MapView from "./MapView";
 import { createTrip, type Trip } from "./api";
+import { useAppContext } from "./AppContext";
 
 export default function TripsPage(props: { userId: number }) {
+  const { darkMode } = useAppContext();
   const [originLat, setOriginLat] = useState(1.3521);
   const [originLng, setOriginLng] = useState(103.8198);
   const [destLat, setDestLat] = useState(1.332);
@@ -13,6 +15,21 @@ export default function TripsPage(props: { userId: number }) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Trip | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // Dark mode colors
+  const colors = darkMode
+    ? {
+        text: "#e5e5e5",
+        textMuted: "#a0a0a0",
+        cardBg: "#16213e",
+        cardBorder: "#0f3460",
+      }
+    : {
+        text: "#111",
+        textMuted: "#666",
+        cardBg: "white",
+        cardBorder: "#eee",
+      };
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -62,24 +79,24 @@ export default function TripsPage(props: { userId: number }) {
   const dest: [number, number] = [destLat, destLng];
 
   return (
-    <div style={{ color: "#111" }}>
-      <h1 style={{ margin: 0, color: "#111", fontSize: 34, fontWeight: 800 }}>Trips</h1>
-      <p style={{ color: "#444", marginTop: 8 }}>Plan a route using the BBP backend and visualize the LineString.</p>
+    <div>
+      <h1 style={{ fontSize: 34, fontWeight: 800, margin: 0, color: darkMode ? "#e5e5e5" : "#111" }}>Trips</h1>
+      <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 8 }}>Plan a route using the BBP backend and visualize the LineString.</p>
 
       <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         <div
           style={{
             padding: 16,
-            background: "white",
-            border: "1px solid #eee",
+            background: colors.cardBg,
+            border: `1px solid ${colors.cardBorder}`,
             borderRadius: 14,
           }}
         >
-          <div style={{ fontWeight: 800, marginBottom: 10, color: "#111" }}>Trip Planner</div>
+          <div style={{ fontWeight: 800, marginBottom: 10, color: colors.text }}>Trip Planner</div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div>
-              <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>from_lat</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>from_lat</div>
               <input
                 style={inputStyle}
                 type="number"
@@ -88,7 +105,7 @@ export default function TripsPage(props: { userId: number }) {
               />
             </div>
             <div>
-              <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>from_lon</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>from_lon</div>
               <input
                 style={inputStyle}
                 type="number"
@@ -97,7 +114,7 @@ export default function TripsPage(props: { userId: number }) {
               />
             </div>
             <div>
-              <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>to_lat</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>to_lat</div>
               <input
                 style={inputStyle}
                 type="number"
@@ -106,7 +123,7 @@ export default function TripsPage(props: { userId: number }) {
               />
             </div>
             <div>
-              <div style={{ fontSize: 12, color: "#555", marginBottom: 6 }}>to_lon</div>
+              <div style={{ fontSize: 12, color: colors.textMuted, marginBottom: 6 }}>to_lon</div>
               <input
                 style={inputStyle}
                 type="number"
@@ -116,7 +133,7 @@ export default function TripsPage(props: { userId: number }) {
             </div>
           </div>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, color: "#222", fontWeight: 600 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10, color: colors.text, fontWeight: 600 }}>
             <input type="checkbox" checked={useOsrm} onChange={(e) => setUseOsrm(e.target.checked)} />
             Use OSRM routing (falls back to straight line)
           </label>
