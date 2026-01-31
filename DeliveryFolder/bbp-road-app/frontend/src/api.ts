@@ -58,7 +58,17 @@ export type Aggregate = {
   reports_confirmed: number;
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://127.0.0.1:8000/api";
+// Auto-detect API base URL for LAN/mobile access
+const getApiBase = () => {
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  }
+  // Use current hostname for LAN access (mobile devices)
+  const host = window.location.hostname;
+  return `http://${host}:8000/api`;
+};
+
+const API_BASE = getApiBase();
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const url = `${API_BASE}${path}`;

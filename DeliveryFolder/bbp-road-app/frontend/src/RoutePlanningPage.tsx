@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { MapContainer, Marker, Polyline, TileLayer, useMap, Popup, CircleMarker } from "react-leaflet";
 import L from "leaflet";
 import { searchRoutes, type ScoredRoute, type PathSearchPreference, type Weather, type PathSearchResponse } from "./api";
@@ -40,6 +40,19 @@ function FitBounds(props: { routes: ScoredRoute[]; origin: [number, number]; des
       map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [map, props.routes, props.origin, props.dest]);
+  return null;
+}
+
+// Component to handle map resize when container becomes visible
+function MapResizeHandler() {
+  const map = useMap();
+  useEffect(() => {
+    // Invalidate size after a short delay to ensure container is visible
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [map]);
   return null;
 }
 
@@ -89,6 +102,20 @@ export default function RoutePlanningPage() {
   const [weather, setWeather] = useState<Weather | null>(null);
   const [cyclingRecommendation, setCyclingRecommendation] = useState<string | null>(null);
   const [routeSource, setRouteSource] = useState<string | null>(null);
+
+  // Responsive state
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showMap, setShowMap] = useState(!isMobile); // On mobile, show form first
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setShowMap(true); // Always show map on desktop
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Dark mode colors
   const colors = darkMode
@@ -173,16 +200,60 @@ export default function RoutePlanningPage() {
 
   return (
     <div>
-      <h1 style={{ margin: 0, color: darkMode ? "#e5e5e5" : "#111", fontSize: 34, fontWeight: 800 }}>
+      <h1 style={{ margin: 0, color: darkMode ? "#e5e5e5" : "#111", fontSize: isMobile ? 24 : 34, fontWeight: 800 }}>
         Route Planning & Scoring
       </h1>
-      <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 8 }}>
+      <p style={{ color: darkMode ? "#d0d0d0" : "#444", marginTop: 8, fontSize: isMobile ? 13 : 16 }}>
         Plan routes with intelligent scoring based on road quality and pothole data.
       </p>
 
-      <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "320px 1fr", gap: 16 }}>
+      {/* Mobile: Toggle between Form and Map */}
+      {isMobile && (
+        <div style={{ display: "flex", gap: 8, marginTop: 12, marginBottom: 8 }}>
+          <button
+            onClick={() => setShowMap(false)}
+            style={{
+              flex: 1,
+              padding: "12px",
+              borderRadius: 10,
+              border: !showMap ? "2px solid #2563eb" : "1px solid #ddd",
+              background: !showMap ? "#2563eb" : "white",
+              color: !showMap ? "white" : "#333",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            📝 Form
+          </button>
+          <button
+            onClick={() => setShowMap(true)}
+            style={{
+              flex: 1,
+              padding: "12px",
+              borderRadius: 10,
+              border: showMap ? "2px solid #2563eb" : "1px solid #ddd",
+              background: showMap ? "#2563eb" : "white",
+              color: showMap ? "white" : "#333",
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            🗺️ Map {routes.length > 0 && `(${routes.length})`}
+          </button>
+        </div>
+      )}
+
+      <div style={{ 
+        marginTop: 16, 
+        display: isMobile ? "flex" : "grid", 
+        flexDirection: "column",
+        gridTemplateColumns: isMobile ? "1fr" : "320px 1fr", 
+        gap: 16 
+      }}>
         {/* Left Panel - Controls */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: isMobile && showMap ? "none" : "flex", flexDirection: "column", gap: 12 }}>
           {/* Search Form */}
           <div
             style={{
@@ -454,28 +525,36 @@ export default function RoutePlanningPage() {
         </div>
 
         {/* Right Panel - Weather Bar + Map */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 650 }}>
+        <div style={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 12, 
+          minHeight: isMobile ? (showMap ? 450 : 0) : 650,
+          height: isMobile && !showMap ? 0 : "auto",
+          overflow: isMobile && !showMap ? "hidden" : "visible",
+        }}>
           {/* Horizontal Weather Bar */}
-          {weather && (
+          {weather && showMap && (
             <div
               style={{
-                padding: "10px 16px",
+                padding: isMobile ? "8px 12px" : "10px 16px",
                 background: weather.is_cycling_friendly ? "#f0fdf4" : "#fffbeb",
                 border: `1px solid ${weather.is_cycling_friendly ? "#bbf7d0" : "#fcd34d"}`,
                 borderRadius: 12,
               }}
             >
-              {/* First row: Weather icon + all stats */}
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              {/* Weather stats - responsive layout */}
+              <div style={{ 
+                display: "flex", 
+                flexWrap: "wrap",
+                alignItems: "center", 
+                gap: isMobile ? 8 : 16,
+                fontSize: isMobile ? 12 : 13,
+              }}>
                 <span style={{ fontSize: 18 }}>🌤️</span>
-                <span style={{ fontSize: 13, color: "#666" }}>Condition:</span>
-                <span style={{ fontWeight: 600, color: "#111", marginRight: 8 }}>{weather.condition_localized || weather.condition}</span>
-                <span style={{ fontSize: 13, color: "#666" }}>Temp:</span>
-                <span style={{ fontWeight: 600, color: "#111", marginRight: 8 }}>{weather.temperature_c}°C</span>
-                <span style={{ fontSize: 13, color: "#666" }}>Wind:</span>
-                <span style={{ fontWeight: 600, color: "#111", marginRight: 8 }}>{weather.wind_speed_kmh} km/h</span>
-                <span style={{ fontSize: 13, color: "#666" }}>Rain:</span>
-                <span style={{ fontWeight: 600, color: "#111" }}>{weather.rain_chance_percent}%</span>
+                <span><span style={{ color: "#666" }}>Temp:</span> <strong>{weather.temperature_c}°C</strong></span>
+                <span><span style={{ color: "#666" }}>Wind:</span> <strong>{weather.wind_speed_kmh} km/h</strong></span>
+                <span><span style={{ color: "#666" }}>Rain:</span> <strong>{weather.rain_chance_percent}%</strong></span>
               </div>
               {/* Second row: Cycling recommendation */}
               {cyclingRecommendation && (
@@ -487,7 +566,7 @@ export default function RoutePlanningPage() {
                     background: weather.is_cycling_friendly ? "#dcfce7" : "#fef9c3",
                     color: weather.is_cycling_friendly ? "#166534" : "#854d0e",
                     fontWeight: 600,
-                    fontSize: 13,
+                    fontSize: isMobile ? 12 : 13,
                     textAlign: "center",
                   }}
                 >
@@ -520,9 +599,12 @@ export default function RoutePlanningPage() {
             >
               🗺️ Map View
             </div>
-            <div style={{ flex: 1, minHeight: 550 }}>
+            <div style={{ height: isMobile ? 380 : 550 }}>
+            {/* Only render map when visible on mobile, or always on desktop */}
+            {(!isMobile || showMap) && (
             <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }}>
               <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <MapResizeHandler />
 
               {/* Draw all routes, selected route on top */}
               {routeLines
@@ -574,6 +656,7 @@ export default function RoutePlanningPage() {
 
               {routes.length > 0 && <FitBounds routes={routes} origin={origin} dest={dest} />}
             </MapContainer>
+            )}
           </div>
           </div>
         </div>

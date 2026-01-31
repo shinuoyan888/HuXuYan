@@ -245,6 +245,11 @@ This document covers the complete implementation of the BBP road application pro
   [*Internationalization*], [English (en)], [#text(fill: rgb("#16a34a"))[✓]], [Medium],
   [], [Chinese (zh)], [#text(fill: rgb("#16a34a"))[✓]], [Medium],
   [], [Italian (it)], [#text(fill: rgb("#16a34a"))[✓]], [Medium],
+  
+  [*Mobile Support*], [Responsive Design], [#text(fill: rgb("#16a34a"))[✓]], [High],
+  [], [Mobile Navigation Menu], [#text(fill: rgb("#16a34a"))[✓]], [High],
+  [], [Touch-friendly Interface], [#text(fill: rgb("#16a34a"))[✓]], [Medium],
+  [], [LAN Access for Testing], [#text(fill: rgb("#16a34a"))[✓]], [Medium],
 )
 
 == Detailed Feature Descriptions
@@ -345,6 +350,27 @@ $ "Score" = "Distance" + "Penalty" $
 - "Fastest" - Shortest distance
 - "Bumpy", "Road Work", "Poor Surface" - Warning tags
 
+=== Mobile Responsive Design
+
+*Implementation*: The application features a fully responsive design that adapts to different screen sizes:
+
+*Mobile Navigation:*
+- Hamburger menu (☰) replaces sidebar on screens < 768px
+- Slide-out navigation overlay with touch-friendly controls
+- Auto-close menu when navigating to new page
+
+*Route Planning Mobile Mode:*
+- Form/Map toggle buttons for switching between input form and map view
+- Full-height map display when in Map mode
+- Automatic map resize handling for proper rendering
+
+*LAN Access Configuration:*
+- Vite configured with `host: true` for network access
+- Dynamic API base URL detection using `window.location.hostname`
+- CORS configured to allow all origins for development/testing
+
+*Motivation*: Mobile support is essential for cyclists who need to access the application on their phones while planning routes or reporting road conditions in the field.
+
 === Privacy By Design
 
 *Implementation*: Location privacy protection following GDPR principles:
@@ -366,7 +392,7 @@ $ "Score" = "Distance" + "Penalty" $
   [User Authentication (JWT)], [Simplified for prototype; username-based identification sufficient for demo],
   [Persistent Database], [In-memory storage suitable for prototype; reduces deployment complexity],
   [Real-time Notifications], [Would require WebSocket infrastructure; deferred to future iteration],
-  [Mobile App], [Web-based SPA provides cross-platform access; native app not required for prototype],
+  [Native Mobile App], [Responsive web app accessible via mobile browsers; native app not required for prototype],
   [Social Features], [Core functionality prioritized; social features are enhancement, not essential],
   [Payment Integration], [Out of scope for academic prototype],
 )
@@ -647,11 +673,11 @@ The frontend follows a *component-based architecture* with centralized state man
   text(fill: white, weight: "bold")[Lines],
   [App.tsx], [Root component, routing logic, user state], [\~70],
   [AppContext.tsx], [Global state provider (dark mode, i18n)], [\~330],
-  [Layout.tsx], [Navigation sidebar, header, page structure], [\~200],
+  [Layout.tsx], [Responsive navigation with mobile hamburger menu], [\~250],
   [DashboardPage.tsx], [Statistics cards, segment map], [\~314],
   [SegmentsPage.tsx], [Segment CRUD, map visualization], [\~241],
   [ReportsPage.tsx], [Report submission, confirmation], [\~281],
-  [RoutePlanningPage.tsx], [Route search, multi-route display], [\~618],
+  [RoutePlanningPage.tsx], [Route search with mobile Form/Map toggle], [\~700],
   [TripsPage.tsx], [Trip creation with OSRM], [\~200],
   [TripHistoryPage.tsx], [Historical trip listing], [\~150],
   [AutoDetectionPage.tsx], [Sensor-based detection interface], [\~200],
@@ -817,6 +843,22 @@ The testing strategy follows the Test Plan outlined in the Design Document (DD),
   [STC-010], [Auto-Detection Simulation], [#text(fill: rgb("#16a34a"))[✓ PASSED]],
 )
 
+=== Test Case 11-14: Mobile Responsive Tests
+
+#table(
+  columns: (auto, 1fr, auto),
+  stroke: 0.5pt + gray,
+  inset: 6pt,
+  fill: (col, row) => if row == 0 { rgb("#1e40af") } else if calc.odd(row) { rgb("#f3f4f6") } else { white },
+  text(fill: white, weight: "bold")[Test ID], 
+  text(fill: white, weight: "bold")[Objective], 
+  text(fill: white, weight: "bold")[Result],
+  [STC-011], [Mobile hamburger menu navigation], [#text(fill: rgb("#16a34a"))[✓ PASSED]],
+  [STC-012], [Route Planning Form/Map toggle on mobile], [#text(fill: rgb("#16a34a"))[✓ PASSED]],
+  [STC-013], [LAN access from mobile device], [#text(fill: rgb("#16a34a"))[✓ PASSED]],
+  [STC-014], [Touch-friendly button and input sizing], [#text(fill: rgb("#16a34a"))[✓ PASSED]],
+)
+
 == API Testing Results
 
 #table(
@@ -968,6 +1010,70 @@ npm run dev
   [OSRM timeout], [Increase timeout in code or use fallback routes],
   [Python not found], [Install Python 3.10+ and add to PATH],
 )
+
+== Available Acceptance Test Infrastructure
+
+This application is a *responsive web application* that can be tested on mobile devices through the following methods:
+
+=== Supported Test Platforms
+
+#table(
+  columns: (auto, 1fr, auto),
+  stroke: 0.5pt + gray,
+  inset: 8pt,
+  fill: (col, row) => if row == 0 { rgb("#1e40af") } else if calc.odd(row) { rgb("#f3f4f6") } else { white },
+  text(fill: white, weight: "bold")[Platform], 
+  text(fill: white, weight: "bold")[Method], 
+  text(fill: white, weight: "bold")[Status],
+  [Android Device], [Mobile browser (Chrome/Firefox)], [#text(fill: rgb("#16a34a"))[✓ Supported]],
+  [iOS Device], [Mobile browser (Safari/Chrome)], [#text(fill: rgb("#16a34a"))[✓ Supported]],
+  [Android Emulator], [Browser in emulator], [#text(fill: rgb("#16a34a"))[✓ Supported]],
+  [iOS Simulator (macOS)], [Safari in simulator], [#text(fill: rgb("#16a34a"))[✓ Supported]],
+)
+
+=== Mobile Testing Instructions
+
+*Step 1: Start servers with LAN access*
+
+```powershell
+# Terminal 1: Start backend with LAN access
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8000
+
+# Terminal 2: Start frontend (already configured for LAN)
+cd frontend
+npm run dev
+# Note: Vite will display both localhost and LAN URLs
+```
+
+*Step 2: Find your computer's IP address*
+
+```powershell
+# Windows
+ipconfig
+# Look for "IPv4 Address" (e.g., 192.168.1.100)
+```
+
+*Step 3: Access from mobile device*
+
++ Ensure mobile device is on the *same WiFi network* as the computer
++ Open mobile browser and navigate to: `http://<your-ip>:5173`
++ Example: `http://192.168.1.100:5173`
+
+*Step 4: (Optional) Generate QR Code*
+
++ Use any online QR code generator (e.g., qr-code-generator.com)
++ Enter URL: `http://<your-ip>:5173`
++ Scan QR code with mobile device camera
+
+#block(
+  fill: rgb("#fef3c7"),
+  inset: 12pt,
+  radius: 4pt,
+  width: 100%,
+)[
+  *Note:* Since this is a web application, no APK or IPA installation is required. The application is fully functional in mobile browsers with responsive design support.
+]
 
 // ============== CHAPTER 8: EFFORT SPENT ==============
 = Effort Spent

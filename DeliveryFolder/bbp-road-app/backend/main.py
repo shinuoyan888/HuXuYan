@@ -388,10 +388,10 @@ def routes_are_similar(route1_coords: List[List[float]], route2_coords: List[Lis
     similarity = close_count / total_sampled if total_sampled > 0 else 1.0
     return similarity >= coord_similarity_threshold
 
-# CORS for Vite dev server (5173) and local builds
+# CORS for Vite dev server (5173), local builds, and LAN access
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origins=["*"],  # Allow all origins for development/testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
